@@ -1,7 +1,7 @@
 While Docker has some disadvantages, Kubernetes, as an orchestration platform, helps address or mitigate many of these challenges. Here are ways in which Kubernetes overcomes some of the disadvantages associated with Docker:
 
 
-1. Resource Overhead:
+1. Resource Overhead: 
 Kubernetes allows for efficient resource utilization by scheduling containers onto nodes based on available resources and constraints. It also supports features like horizontal pod autoscaling to automatically adjust the number of running instances based on demand.
 
 
