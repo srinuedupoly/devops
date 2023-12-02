@@ -1,0 +1,23 @@
+                                               K3’s installation on ubuntu 22.04
+                                            -----------------------------------
+
+-> Update the kernal to the latest
+sudo apt update
+sudo apt upgrade
+
+-> Execute the below command to install k3s
+curl -sfL https://get.k3s.io | sh –
+
+-> After installation to check the k3s status
+sudo systemctl status k3s
+
+-> To start the K3s
+sudo systemctl start k3s
+-> To stop the K3s
+sudo systemctl stop k3s
+-> To restart the K3s
+sudo systemctl restart k3s
+
+-> Optional: k3s Configuration File
+
+scp user@your-server:/etc/rancher/k3s/k3s.yaml ~/.kube/config
