@@ -1,0 +1,44 @@
+Kubernetes Architecture
+-------------------------
+
+Kubernetes Architecture:
+------------------------
+
+a. kube API server: It is a primary management component in cluster and is responsible for orchestrating all operations in cluster
+                    Authenticate user-> validate reuest-> retirve data-> update etcd-> schedular-> kubelet
+
+b. kube controller manager: Brain behind orchestration. It is a process that continously monitors the state of various componenets
+    within the system and work towards bringing the whole system to a desired state
+    1. node controller: Monitor the status of nodes via api server
+                    Node monitor period: 10s
+                    Node monitor grace period: 
+                    pod eviction timeout: 
+    2. Replication controller: Maintians desired number of containers all the time
+
+c. kube schedular: Responsible for scheduling pods in nodes  as in It will decide which pod has to adjust in which node
+                  kubelet creates the pod in node, depends on the resources it will decide
+                  1. filter nodes
+                  2. rank nodes
+
+d. kubelet : It is an agent that runs on each worker node . It keeps monitoring the worker node componenets 
+   and keep on sending communication to API server component in master node.
+
+e. kubeproxy: It is a virtual componenet that lives in memory . It is a process that runs in each node in kuberneets cluster.
+              Its job is to look for new services and forward traffic according to rules.
+              Network conponenet and is responsible for comminication between containers
+
+f. Container runtime engine: Its an uderlying software that is responsible for running containers. Ec: docker,rocker,conatiner-D
+
+g. etcd cluster: It is a distributed , reliable, keyvalue store that is simple,secure & fast.  
+                 Stores all information about the nodes,pods,cm,secrets, roles, accounts, rolebindings
+                 It will install as a pod when we install kubernetes
+                  
+key: value
+------------
+Name : Ram
+Age : 40
+Location: Ayodhya
+
+
+
+
