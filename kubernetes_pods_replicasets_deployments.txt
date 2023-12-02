@@ -1,41 +1,26 @@
 pods:
--------
-====================
-In Kubernetes, a Pod is the smallest deployable unit that represents a single instance of a running process in a cluster. A Pod can contain one or more containers that are tightly coupled and share the same network namespace, storage, and other resources. The primary purpose of a Pod is to provide a way to deploy and manage containers together on the same host.
-
-Here's a simple example of a Pod definition in YAML:
-====================
+=====
 1.	Containers are encapsulated in Kubernetes object known as pod
 2.	Pod is a single instance of an application
 3.	Pod is a smallest object in Kubernetes
 4.	Single pod can have multi container (helper container like init container/sidecar container)- share the same network space and volumes space
 
-
-
-cat demo-pod.yaml 
-
-apiVersion: v1
-
-kind: Pod
-
-metadata:
-
-  name: nginx
-
-spec:
-
-  containers:
-
-  - name: nginx
-
-    image: nginx:1.14.2
-
-    ports:
-
-    - containerPort: 80
+Here's a simple example of a Pod definition in YAML:
 ----------------------------
+cat demo-pod.yaml 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+-------------------------------
 Explanation of key components:
-
+-------------------------------
 apiVersion: Specifies the API version being used. In this case, it's v1, the core Kubernetes API version.
 
 kind: Specifies the type of Kubernetes resource, and in this case, it's a Pod.
@@ -52,132 +37,108 @@ image: The Docker image to use for the container, in this case, the latest versi
 
 ports: Specifies the ports to open on the container.
 
-
-
 -----------------------------
+-> Command to create a po
 kubectl apply -f demo-pod.yaml
+-> Command to list the pods
 kubectl get pods
+-> Command to list the pods in detail
 kubectl get pods -o wide
+-> Command to delete the po
 kubectl describe po <pod name>
+-> Command to verify the logs of a pod
 kubectl logs <pod name>
+-> Command to delete the po
 kubectl delete -f demo-pod.yaml
 ==========================================
+
 Replication controller/Replica set
+----------------------------------
 
 Replica set is advanced for replication controller
 
-Controllers are brain behind kubernetes
-These are the processes that monitor Kubernetes objects and respond accordingly
-For high availability – controller helps to run multiple instances , if once pod fails , application will use other pod 
-Even if one existing pod fails , it will create another one in parallel  
-Replication controller make sure that desirable pods to run at all times
-Replication controller helps in load balancing and scaling 
+1. Controllers are brain behind kubernetes
+2. These are the processes that monitor Kubernetes objects and respond accordingly
+3. For high availability – controller helps to run multiple instances if once pod fails application will use other pod 
+4. Even if one existing pod fails , it will create another one in parallel  
+5. Replication controller make sure that desirable pods to run at all times
+6. Replication controller helps in load balancing and scaling 
 
 
 cat demo-rc.yaml 
 
 apiVersion: apps/v1
-
 kind: ReplicaSet
-
 metadata:
-
   name: nginx-replicaset
-
 spec:
-
   replicas: 5
-
   selector:
-
     matchLabels:
-
       app: nginx
-
   template:
-
     metadata:
-
       labels:
-
         app: nginx
-
     spec:
-
       containers:
-
       - name: nginx-container
-
         image: nginx:latest
-
         ports:
-
         - containerPort: 80
 ------------------------------------------
+-> Command to create the replica set
 kubectl apply -f demo-rc.yaml
+-> Command to list the pods
 kubectl get pods
+-> Command to list the pods in detail
 kubectl get pods -o wide
+-> Command to describe the po 
 kubectl describe po <pod name>
+-> Command to check the logs
 kubectl logs <pod name>
-
+-> Command to dispaly the replica set
 kubectl get rs
-
-delete a pod and check the status
+-> Delete a pod and check the status
 kubectl delete po <pod name>
-
-kubectl get po
+kubectl get po - > Even if you delete the pod, desirable number of pods will run as we defined the replica sets
 kubectl delete -f demo-rc.yaml
 
 
 =============================================================
-In Kubernetes, a Deployment is a resource object used to manage the deployment and scaling of a set of Pods. Deployments provide a declarative way to define the desired state of your application and manage updates to it. They are a higher-level abstraction over ReplicaSets, making it easier to handle rolling updates, scaling, and rollback operations.
+
+Deployment:
+-----------
+1. In Kubernetes, a Deployment is a resource object used to manage the deployment and scaling of a set of Pods. 
+2. Deployments provide a declarative way to define the desired state of your application and manage updates to it.
+3. They are a higher-level abstraction over ReplicaSets, making it easier to handle rolling updates, scaling, and rollback operations.
 
 Here is an example of a simple Deployment YAML file:
 
-
+-------------------------------------------------------------
 cat demo-deploy.yaml 
-
 apiVersion: apps/v1
-
 kind: Deployment
-
 metadata:
-
   name: nginx-deployment
-
 spec:
-
   replicas: 5
-
   selector:
-
     matchLabels:
-
       app: nginx
-
   template:
-
     metadata:
-
       labels:
-
         app: nginx
-
     spec:
-
       containers:
-
       - name: nginx-container
-
         image: nginx:latest
-
         ports:
-
         - containerPort: 80
------------------------------------------
-
+----------------------------------------------------
 Explanation of key components:
-
+--------------------------------
 apiVersion: Specifies the API version being used. In this case, it's apps/v1, the API version for Deployments.
 
 kind: Specifies the type of Kubernetes resource, and in this case, it's a Deployment.
@@ -204,34 +165,30 @@ image: The Docker image to use for the container.
 
 ports: Specifies the ports to open on the container.
 
-
 ------------------------------------------
+-> Command to create a deployment
 kubectl apply -f demo-deploy.yaml
+-> Command to list the deployments
 kubectl get deployments
+-> Command to list the replicasets
 kubectl get rs
+-> Command to list the pods
 kubectl get pods
 kubectl get pods -o wide
 kubectl describe po <pod name>
 kubectl logs <pod name>
 
-delete a pod and check the status
+-> Delete a pod and check the status
 kubectl delete po <pod name>
-
 kubectl get po
 
-edit deployment file and change the number of replicas
+-> Edit deployment file and change the number of replicas
 kubectl edit rs <replica set name>
 # change the replicas to 5
 
 kubectl get pods
 
 kubectl delete -f demo-deploy.yaml
-
-
-
-
-
-
 =============================================================
 
 
