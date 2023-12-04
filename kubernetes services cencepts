@@ -1,0 +1,131 @@
+Kubernetes services:
+---------------------
+
+Kubernetes services enable communication between the various components with in and outside application
+
+3 Types of services available
+
+ClusterIP:
+
+Description: Exposes the service on a cluster-internal IP. The service is only reachable within the cluster.
+Use Case: Internal communication between services within the cluster.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
+
+
+- If we dont specify type , by default it will consider as cluster IP
+
+
+--------------------------------------------------------------------------
+
+NodePort:
+
+Description: Exposes the service on a static port on each node's IP. The service is accessible externally at <NodeIP>:<NodePort>.
+Use Case: External access to the service, typically for development or testing.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - nodePort: 30008
+      port: 80
+      targetPort: 8080
+  type: NodePort
+
+- If we dont mention nodeport , it will pick random port
+- If we dont mention port , it will consider the target port
+- If we dont mention the selector , it doesnt know to which pod the target port needs to be selected (we will achieve using selector(service.yaml ) and labels(pod.yaml)
+
+
+# kubectl create -f service.yaml 
+kubectl get svc
+
+http://192.168.0.1:30008
+
+--------------------------------------------------------------------------
+
+what if multiple pods created (using replica's) - selector label will be same for multiple pods - Load balancer is a built in feature for service which will come into picture and it used Alogithm - random  
+
+
+--------------------------------------------------------------------------
+LoadBalancer:
+
+Description: Creates an external load balancer that routes traffic to the service. The external IP is provided by the cloud provider.
+Use Case: Production deployments where external clients need access, and a cloud provider supports load balancers.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
+
+
+--------------------------------------------------------------------------
+
+
+
+
+ExternalName:
+
+Description: Maps the service to the contents of the externalName field (e.g., a DNS name).
+Use Case: Use when you want to give a Kubernetes service a DNS name that corresponds to a service outside the cluster.
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: ExternalName
+  externalName: my.database.example.com
+--------------------------------------------------------------------------
+Headless (ClusterIP with None):
+
+Description: Exposes the service without a ClusterIP. This is used when you don't need a single, stable IP.
+Use Case: For stateful sets where each pod has a unique identity.
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  clusterIP: None
+  selector:
+    app: my-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+
+
+
+
+--------------------------------------------------------------------------
+
+
+
+
