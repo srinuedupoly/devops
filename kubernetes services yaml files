@@ -1,0 +1,157 @@
+=====================================================================
+
+service: Nodeport 
+-------------------
+Deployment file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+node port service file
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+
+
+kubectl apply -f nginx-deployment.yaml
+kubectl apply -f nginx-service-nodeport.yaml
+
+
+kubectl get service nginx-service
+
+
+http://node-ip:32000
+
+
+
+=====================================================================
+
+service: cluster IP
+---------------------
+Deployment file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+cluster IP service file
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+
+ http://nginx-service:80 or http://10.100.200.10:80.
+ 
+ 
+=====================================================================
+Load Balancer:
+-----------------
+deployment file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+load balancer yaml file
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+
+kubectl apply -f nginx-deployment.yaml
+kubectl apply -f nginx-service-loadbalancer.yaml
+
+
+
+The external IP will be provided by the cloud provider.To check the external IP assigned to the LoadBalancer service, you can use the following command:
+
+kubectl get service nginx-service
+
+
+Look for the external IP under the EXTERNAL-IP column. It might take a few minutes for the external IP to be provisioned, especially if you are using a cloud provider's LoadBalancer service.
+
+Once you have the external IP, you can access the Nginx service externally using that IP. For example, if the external IP is X.X.X.X, you can access it at http://X.X.X.X:80 in your web browser.
+
+This setup is suitable for production environments where you want to expose your service to external clients and take advantage of the cloud provider's load balancing capabilities.
+
