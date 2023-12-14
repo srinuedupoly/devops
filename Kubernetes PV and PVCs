@@ -1,0 +1,202 @@
+In Kubernetes, Persistent Volumes (PV) and Persistent Volume Claims (PVC) are used to provide persistent storage for applications running in pods. They allow decoupling of storage resources from the application, making it easier to manage and scale storage independently.
+
+Here's an explanation of PV and PVC:
+
+Persistent Volume (PV):
+
+A Persistent Volume (PV) in Kubernetes represents a piece of storage provisioned in the cluster.
+PVs are created by a cluster administrator and are meant to be shared and reused by multiple applications or pods.
+They are defined with specific characteristics, such as access modes, capacity, and storage class.
+PVs can be dynamically provisioned or statically defined based on the needs of the cluster.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mydata
+
+
+Persistent Volume Claim (PVC):
+
+A Persistent Volume Claim (PVC) is a request for storage by a pod.
+It is created by a user or developer and is used to claim a specific amount of storage from the available PVs.
+The PVC specifies the desired storage class, access mode, and storage capacity required by the application.
+PVCs can be dynamically bound to an available PV that matches the specified criteria.
+Example PVC definition:
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+Binding PVC to PV:
+
+When a PVC is created, Kubernetes tries to find a suitable PV based on the specified criteria (storage class, access mode, capacity).
+If a matching PV is available, the PVC is bound to that PV.
+The pod, which requests storage through the PVC, can then use the storage from the bound PV.
+
+
+Dynamic Provisioning:
+
+Kubernetes supports dynamic provisioning of storage, where a storage class can automatically create PVs as PVCs are created.
+This allows for on-demand provisioning of storage resources without the need for a cluster administrator to manually create PVs.
+Example Storage Class definition:
+
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard
+provisioner: k8s.io/minikube-hostpath
+
+
+Example PVC using dynamic provisioning:
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+================================================
+Working deplyment file with PV and PVC's
+-------------------
+demo-pv-pvc.yaml:
+----------------
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nginx-logs-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /path/on/host/nginx-logs
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        volumeMounts:
+        - name: nginx-logs-volume
+          mountPath: /var/log/nginx
+  volumes:
+  - name: nginx-logs-volume
+    persistentVolumeClaim:
+      claimName: nginx-logs-pvc
+
+----------------------------------
+Kubectl create -f demo-pv-pvc.yml
+
+kubectl get po
+kubectl get pv
+kubectl get pvc
+==========================================================
+
+Working Dynamic provisioning yaml file
+--------------------------------------
+storage-class.yaml
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: my-dynamic-storage-class
+provisioner: your-storage-provisioner
+
+
+demo-pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: my-dynamic-pvc
+spec:
+  storageClassName: my-dynamic-storage-class
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+
+
+dynamic-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: your-docker-image:tag
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: my-dynamic-pvc
+
+
+
+
