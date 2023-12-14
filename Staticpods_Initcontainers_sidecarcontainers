@@ -1,0 +1,101 @@
+Static pods:
+------------
+Static pods in Kubernetes are pods that are managed directly by the kubelet on a node, rather than by the control plane. These pods are defined on the node itself and are not included in the Kubernetes API server's etcd datastore. Static pods are typically used for system components that need to run on every node, such as network plugins or monitoring agents.
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-static-pod
+  namespace: kube-system
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:latest
+
+----------------------------
+--pod-manifest-path
+
+
+
+/etc/kubernetes/manifests       -- kubeadm
+
+grep -i pod-manifest-path /etc/systemd/system/kubelet.service   --- Kubelet Systemd Service
+
+
+grep -i pod-manifest-path /etc/kubernetes/kubelet.conf --- /etc/kubernetes/kubelet.conf
+
+=========================================================================================================
+Init Containers:
+----------------
+
+An init container is a special type of container that runs before the main containers in a Pod start. Init containers are primarily used for setup and configuration tasks that need to be completed before the application containers in the Pod are initiated.
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      initContainers:
+      - name: init-nginx
+        image: busybox:latest
+        command: ['sh', '-c', 'echo "Init Container is initializing..." && sleep 5']
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+
+
+=========================================================================================================
+
+Sidecar Containers:
+--------------------
+
+A sidecar container is a pattern in containerization where an additional, helper container is deployed alongside the main application container within the same pod. The sidecar container runs in the same context as the main application container and shares the same network and storage resources. The purpose of a sidecar is to provide auxiliary functionalities such as logging, monitoring, or data synchronization without directly impacting the core functionality of the main container.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-with-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+      - name: sidecar-container
+        image: busybox:latest
+        command: ['sh', '-c', 'while true; do echo $(date) " - Sidecar is running"; sleep 5; done']
+
+
+
+
+
+
+
+
+
+
+
+
+
