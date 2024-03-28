@@ -1,0 +1,39 @@
+A DaemonSet ensures that all (or some) nodes run a copy of a pod. As nodes are added or removed from the cluster, the DaemonSet automatically adjusts the number of pods to match the current set of nodes.
+
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+
+
+apiVersion: Specifies the API version. In this case, it's apps/v1, indicating the Apps API version.
+
+kind: Specifies the type of resource, which is DaemonSet in this case.
+
+metadata: Contains information about the metadata of the DaemonSet, such as its name.
+
+spec: Describes the desired state of the DaemonSet.
+
+selector: Defines how the DaemonSet identifies which nodes to run on. In this example, it matches nodes with the label app: nginx.
+
+template: Specifies the pod template for the DaemonSet.
+
+metadata: Contains labels for the pods created by the DaemonSet.
+
+spec: Describes the specification of the pods.
+
+containers: Defines the containers within the pod. In this example, it includes a container named nginx-container with the Nginx image.
+This DaemonSet ensures that a pod with an Nginx container (nginx-container) is running on each node labeled with app: nginx.
