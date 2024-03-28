@@ -1,0 +1,177 @@
+Pre-upgrade Considerations:
+Backup:
+
+Before starting the upgrade process, it's crucial to backup critical data, including etcd data, configuration files, and manifests.
+Read Release Notes:
+
+Review the release notes for the new Kubernetes version to understand any breaking changes, new features, or considerations for the upgrade.
+Testing:
+
+Test the upgrade process in a non-production environment to identify potential issues and ensure a smooth upgrade in the production environment.
+Upgrading Control Plane:
+Update kubectl:
+
+Ensure that your local kubectl version matches or is compatible with the version of the control plane.
+
+kubectl version --short
+
+
+
+Upgrade etcd:
+
+If you are using a separate etcd cluster, upgrade etcd following the etcd upgrade instructions.
+Upgrade Control Plane Components:
+
+Upgrade the control plane components (API server, controller manager, scheduler) one by one. This typically involves updating the container image or binaries.
+
+
+kubectl get nodes  # Ensure all nodes are in a "Ready" state
+kubectl drain <node-name> --ignore-daemonsets  # Drain node before upgrading
+# Upgrade the control plane components (specific steps depend on your installation method)
+kubectl uncordon <node-name>  # Uncordon node after upgrade
+
+
+Upgrading Nodes:
+Update Kubernetes Software on Nodes:
+
+Upgrade the Kubernetes software on each node. This might involve updating the kubeadm, kubelet, and kubectl binaries.
+
+
+# On each node
+apt-get update && apt-get install -y kubeadm=<new-version> kubelet=<new-version> kubectl=<new-version>
+
+
+
+Run kubeadm Upgrade Commands:
+
+Upgrade the node using kubeadm upgrade. The specific commands depend on your current version and the target version.
+
+
+# On each node
+kubeadm upgrade plan  # View upgrade plan
+kubeadm upgrade apply v<new-version>
+
+
+
+Upgrade kubelet and kubectl:
+
+Upgrade the kubelet and kubectl binaries on each node.
+
+
+
+# On each node
+systemctl restart kubelet
+
+
+
+
+Uncordon Nodes:
+
+Once the node upgrade is complete, uncordon the nodes to allow scheduling new pods.
+
+
+kubectl uncordon <node-name>
+
+kubectl uncordon <node-name>
+
+
+Verify Upgrade:
+
+
+Check Control Plane Components:
+
+Ensure that control plane components are running the expected version.
+
+
+kubectl get nodes
+kubectl get pods -n kube-system
+
+
+Check Nodes:
+
+Verify that all nodes are in a "Ready" state.
+
+kubectl get nodes
+
+
+Test Applications:
+
+Test your applications to ensure they are functioning correctly after the upgrade.
+
+
+
+Rolling Back:
+
+Rollback Control Plane:
+
+If issues arise after the upgrade, you may need to roll back the control plane components.
+
+
+kubeadm upgrade undo
+
+
+2. Rollback Nodes:
+
+To roll back nodes, you may need to restore the previous version of the kubelet and kubectl binaries.
+
+Backup and Restore:
+
+If needed, restore from the backup created before the upgrade.
+
+
+
+=================================================================================
+
+kubectl drain:
+
+The kubectl drain command is used to gracefully evict all pods from a node, preparing it for maintenance or decommission. It cordons the node to prevent new pods from being scheduled on it and then starts evicting existing pods.
+
+
+kubectl drain <node-name> --ignore-daemonsets
+
+
+<node-name> is the name of the node you want to drain.
+--ignore-daemonsets flag is used to ignore DaemonSet-managed pods, ensuring that essential system pods are not evicted.
+After draining, the node is cordoned, and new pods won't be scheduled on it until it is uncordoned.
+
+
+
+kubectl cordon:
+
+The kubectl cordon command is used to mark a node as unschedulable, preventing new pods from being scheduled on it. Existing pods on the node continue to run.
+
+
+kubectl cordon <node-name>
+
+<node-name> is the name of the node you want to cordon.
+After cording a node, it won't accept new pod assignments until it is uncordoned.
+
+
+
+
+
+kubectl uncordon:
+
+The kubectl uncordon command is used to mark a node as schedulable again, allowing new pods to be scheduled on it.
+
+
+kubectl uncordon <node-name>
+
+
+
+<node-name> is the name of the node you want to uncordon.
+After uncordoning, the node becomes available for new pod assignments. It's typically used after maintenance or upgrades when you want to resume scheduling on the node.
+
+
+==============================================================
+
+
+
+
+
+
+
+
+
+
+
