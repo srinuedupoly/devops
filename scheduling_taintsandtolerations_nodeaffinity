@@ -1,0 +1,460 @@
+Manual scheduling:
+
+By default pod will create on the available node if we dont mention the nodeName parameter in yaml file
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      nodeName: srinu-virtualbox
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+kubectl apply -f demo-deploy-schedular.yaml 
+
+kubectl get po -o wide
+-------------------------------------------------------
+
+change the nodename parameter to "NodeName: srinu-virtualbox1" in above deployment file
+
+kubectl apply -f demo-deploy-schedular.yaml 
+
+kubectl get po -o wide -> observe the pod status , it will be in pending state as nodeName mentioned in not available
+
+--------------------------------------------------------
+
+
+
+
+Taints and tolerations:
+========================
+
+Taints are set on nodes and tolerations are set on pods
+
+Taints and tolerations doesnt tell pods to go to specific node , it will only tells node whether to accept specifc node
+
+we can apply taints and tolerations on master node
+
+
+Taints:
+
+Taints are used to repel certain pods from a node. A taint is applied to a node, indicating that it doesn't want to accept pods that do not tolerate the taint.
+A taint consists of a key, a value, and an effect. The key and value are arbitrary strings, and the effect can be one of three values: NoSchedule, PreferNoSchedule, or NoExecute.
+
+NoSchedule: Pods that do not tolerate the taint are not scheduled on the node.
+
+PreferNoSchedule: Kubernetes will try to avoid placing a pod on the node but not guarantee
+
+NoExecute: Existing pods on the node that do not tolerate the taint are evicted and any new pods will not be able to run on node
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+  tolerations:
+  - key: "env"
+    operator: "Equal"
+    value: "prod"
+    effect: "NoSchedule"
+
+kubectl apply -f nginx-deployment.yaml
+
+
+
+
+
+-----------------------------
+
+Tolerations:
+
+Tolerations are set on pods and indicate that the pod can tolerate nodes with certain taints.
+When a pod has a toleration that matches a taint on a node, it can be scheduled on that node.
+Tolerations have similar parameters to taints: key, value, and effect. The key and value must match the taint, and the effect must be the same or less restrictive.
+
+
+  tolerations:
+  - key: "env"
+    operator: "Equal"
+    value: "prod"
+    effect: "NoSchedule"
+
+
+kubectl taint nodes <node-name> env=prod:NoSchedule
+
+-----------------------------
+kubectl describe node srinu-virtulbox
+
+kubectl taint nodes srinu-virtualbox env=prod:NoSchedule
+
+create a pod without tolerations and check the pod status
+
+
+kubectl run nginxpod --image=nginx --dry-run=client -o yaml
+
+ 
+kubectl taint nodes <node-name> env=prod:NoSchedule-
+---------------------------------------------------
+kubectl taint nodes srinu-virtualbox env=prod:NoSchedule
+
+
+deployment file:
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+      tolerations:
+      - key: "env"  # Taint key
+        operator: "Equal"
+        value: "prod"  # Taint value
+        effect: "NoSchedule"
+
+
+The tolerations section is used to specify tolerations for the pods.
+The key, operator, value, and effect fields define the toleration. In this case, the pod tolerates a taint with the key "example.com/nginx," value "true," and effect "NoSchedule."
+
+
+
+
+kubectl apply -f nginx-deployment.yaml
+
+---------------------------------------------------
+
+Below is an updated version of the Nginx deployment YAML file that includes all possible operator and effect parameters for taint tolerations:
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+      tolerations:
+      - key: "example.com/nginx"  # Taint key
+        operator: "Equal"
+        value: "true"  # Taint value
+        effect: "NoSchedule"
+      - key: "example.com/other"
+        operator: "Exists"
+        effect: "PreferNoSchedule"
+      - key: "example.com/yet-another"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+      - key: "example.com/not-this-one"
+        operator: "Equal"
+        value: "true"
+        effect: "NoExecute"
+        tolerationSeconds: 3600  # Tolerate for 1 hour
+
+
+The first toleration tolerates a taint with the key "example.com/nginx," value "true," and effect "NoSchedule" using the Equal operator.
+The second toleration tolerates nodes with any taint having the key "example.com/other" using the Exists operator and has an effect of "PreferNoSchedule."
+The third toleration tolerates a taint with the key "example.com/yet-another," value "true," and effect "NoExecute" using the Equal operator.
+The fourth toleration is similar to the third but includes a tolerationSeconds field, indicating that the pod can tolerate the taint for 1 hour (3600 seconds) before eviction.
+These tolerations cover various scenarios and can be adjusted based on your specific requirements. Remember to taint the nodes accordingly before deploying the pods.
+
+---------------------------------------------------
+
+
+Node selectors:
+-------------
+
+Assume there are 3 nodes, one is large and two are medium.
+Request is need to schedule the the pod on large node.
+We need to update the yaml file with nodeSelector option with large size
+but how to pod know which is larger node
+we need to label the node with size Large
+
+on node:
+kubectl label nodes <ndoename> size=large
+kubectl label nodes srinu-virtualbox type=nginx-node
+
+kubectl label nodes srinu-virtualbox type-  --> to remove the lable
+
+
+
+create deployment file
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      nodeSelector:
+        type: nginx-node  # Node selector parameter
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---------------------------------
+
+disadvantage of nodeselector is 
+- place the node on medium or large node
+- place the node on NOT small node
+
+as in or condition and AND conditions we cannot use
+in this scenario nodeaffinity comes into picture
+
+==============================================================
+
+Node Affinity:
+---------------
+
+NodeAffinity in Kubernetes is a feature that allows you to constrain the scheduling of pods based on node-related attributes. It provides more control over where your pods are placed within the cluster, allowing you to influence pod placement decisions based on node properties such as node labels.
+
+
+operators:  In, NotIn, Exists, and DoesNotExist.
+
+
+
+There are two types of NodeAffinity:
+----------------------------------------------
+requiredDuringSchedulingIgnoredDuringExecution: Specifies rules that must be met for a pod to be scheduled on a node. If the node does not satisfy the affinity rules, the pod won't be scheduled on that node.
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: type
+          operator: In
+          values:
+          - nginx-node
+----------------------------------------------
+
+preferredDuringSchedulingIgnoredDuringExecution: Specifies rules that are preferred but not required. The scheduler will try to schedule the pod on a node that satisfies the affinity rule, but it's not mandatory.
+
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - preference:
+        matchExpressions:
+        - key: type
+          operator: In
+          values:
+          - nginx-node
+      weight: 1
+
+
+
+
+----------------------------------------------
+
+requiredDuringSchedulingIgnoredDuringExecution:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-required
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                - nginx-node
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+----------------------------------------------
+
+preferredDuringSchedulingIgnoredDuringExecution
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-preferred
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: type
+                operator: In
+                values:
+                - nginx-node
+            weight: 1
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+----------------------------------------------
+
+requiredDuringSchedulingIgnoredDuringExecution:  --- This will be used when you feel that pod needs to be scheduled mandatorily on particular node
+--------                -------    
+preferredDuringSchedulingIgnoredDuringExecution  --- This will be used when you feel that pod does not need tobe scheduled mandatorily on specific node
+---------                -------
+
+Ignored means --- even if the nodel label changes later point of time , it doesnt effect the existing pod
+
+----------------------------------------------
+
+==========================================================================
+
+Taints and tolerations  vs NodeAffinity
+---------------------------------------
+
+Taints and Tolerations:
+Taints:
+
+Applied to Nodes: Taints are attributes applied to nodes to repel certain pods.
+Syntax: A taint is applied using the kubectl taint nodes command, specifying the node name, taint key, value, and effect.
+Example: kubectl taint nodes node-1 key=value:NoSchedule
+Tolerations:
+
+Specified by Pods: Pods can tolerate specific taints using tolerations in their PodSpec.
+Syntax: Tolerations are specified within the tolerations field of the pod's specification.
+
+
+tolerations:
+- key: "key"
+  operator: "Equal"
+  value: "value"
+  effect: "NoSchedule"
+
+
+Use Case:
+
+Taints and tolerations are useful when you want to repel or attract pods to specific nodes based on node attributes.
+Common scenarios include dedicating nodes to specific workloads, reserving nodes for critical applications, or avoiding scheduling on nodes with specific hardware characteristics
+
+
+
+Node Affinity:
+
+
+Specified by Pods: Affinity rules are specified within the affinity field of the pod's specification.
+Syntax: Node affinity consists of requiredDuringSchedulingIgnoredDuringExecution and preferredDuringSchedulingIgnoredDuringExecution rules.
+
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: "key"
+          operator: "In"
+          values:
+          - "value"
+
+
+Use Case:
+
+Node affinity is used to constrain pod placement based on node properties such as node labels.
+It allows you to express rules that must be met or preferred for a pod to be scheduled on a node.
+Useful for scenarios where you want fine-grained control over pod placement based on node attributes.
+Key Differences:
+Application: Taints and tolerations are primarily used to control pod placement based on node attributes, while node affinity provides more flexibility by allowing rules based on a broader set of node properties.
+
+Syntax: Taints are applied at the node level, while tolerations are specified at the pod level. Node affinity is part of the pod's affinity rules.
+
+Granularity: Taints can be more granular as they can be applied at the node level, whereas node affinity rules are applied at the pod level.
+
+
+
+
+In summary, taints and tolerations are more focused on node attributes and are used to express constraints on where pods can be scheduled, while node affinity provides a more general mechanism for expressing rules based on various node properties. The choice between them depends on the specific requirements of your workload and how you want to control pod placement within your cluster.
+
+==================================================================================
+
+
+
+
