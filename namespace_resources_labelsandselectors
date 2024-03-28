@@ -1,0 +1,198 @@
+Namespaces:
+
+In Kubernetes, namespaces provide a way to divide cluster resources between multiple users, teams, or projects. They serve as a virtual cluster within a physical cluster, allowing you to create isolated environments and avoid naming conflicts between different applications and services. Here are some key points to understand about Kubernetes namespaces:
+
+Isolation: Namespaces provide a level of isolation for resources within the cluster. Objects created in one namespace, such as pods or services, are unique within that namespace and do not conflict with objects in other namespaces.
+
+Resource Scope: Each Kubernetes resource (such as pods, services, deployments, etc.) belongs to a namespace. If a namespace is not explicitly specified, the resource is assumed to belong to the default namespace.
+
+Default Namespace: When you create a Kubernetes cluster, it comes with a default namespace. Resources created without specifying a namespace are automatically placed in the default namespace. The default namespace can be changed, but it's a good practice to use custom namespaces to organize resources.
+
+Organization and Management: Namespaces help in organizing and managing resources. You can logically group related resources within a namespace, making it easier to understand and manage the cluster's structure.
+
+Access Control: Kubernetes RBAC (Role-Based Access Control) policies can be applied at the namespace level. This allows you to control who can access and manipulate resources within a specific namespace. Different teams or users can have different levels of access to resources based on their roles.
+
+Network Isolation: By default, namespaces provide network isolation. Pods in one namespace cannot directly communicate with pods in another namespace without using explicit networking configurations like services.
+
+------------------------------
+create a namespace
+
+
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prod
+
+
+
+kubectl create -f prod-namespace.yaml
+-----------------------------
+create a deployment in specific namespace
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: prod  # Set the namespace to prod
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+kubectl create -f prod-namespace.yaml
+
+kubectl get po --namespace=prod
+
+kubectl create -f prod-namespace.yaml
+
+kubectl get namespaces
+
+kubectl delete deploy nginx-deployment --namespace=prod
+
+kubectl delete ns prod
+
+kubectl get namespaces
+
+kubectl get pods --all-namespaces
+
+-> To set the specifc namespace as default
+kubectl config set-context $(kubectl config current_context)
+
+===================================================================
+
+How to limit the resources to a specific namespace
+
+
+To limit the resources (CPU and memory) for containers in a Kubernetes namespace, you can define resource requests and limits in the container specifications. Resource requests are the amount of resources that the container is guaranteed to get, and resource limits are the maximum amount of resources that the container can use.
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+
+
+kubectl apply -f demo-deploy-resources-prodns.yaml
+
+kubectl get po --all-namespaces
+
+-> increase the replica set to 4 
+
+kubectl get po --all-namespaces
+
+
+=======================================================================
+
+Lables and selectors:
+
+- Lables are the properties attached to each resource
+- selectors are used to filter these resources
+- There will be many objects in kubernetes(pods,deploymnets,services,configmaps,secrets)
+- Each object has been attached to specific labels according to the app, function, tier etc
+- By using selectors , we can filter specific objects
+
+
+
+
+cat demo-deploy-label-selector.yaml 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx2-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx2
+  template:
+    metadata:
+      labels:
+        app: nginx2
+        env: prod
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+kubectl apply -f demo-deploy-label-selector.yaml
+
+-----------------------------------------------------
+
+
+cat demo-deploy-label-selector1.yaml 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx1
+  template:
+    metadata:
+      labels:
+        app: nginx1
+        env: dev
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+kubectl apply -f demo-deploy-label-selector1.yaml
+-------------------------------
+
+kubectl get po -l env=dev
+
+
+kubectl get po -l env=prod
+========================================================
+
+
+
+
+
