@@ -1,6 +1,6 @@
 pods:
 =====
-1.	Containers are encapsulated in Kubernetes object known as pod
+1.	Containers are encapsulated in Kubernetes object known as pod.
 2.	Pod is a single instance of an application
 3.	Pod is a smallest object in Kubernetes
 4.	Single pod can have multi container (helper container like init container/sidecar container)- share the same network space and volumes space
