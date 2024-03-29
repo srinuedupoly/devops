@@ -1,6 +1,6 @@
 In Kubernetes, Persistent Volumes (PV) and Persistent Volume Claims (PVC) are used to provide persistent storage for applications running in pods. They allow decoupling of storage resources from the application, making it easier to manage and scale storage independently.
 
-Here's an explanation of PV and PVC:
+Here's an explanation of PV and PVC-
 
 Persistent Volume (PV):
 
