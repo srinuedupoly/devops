@@ -47,7 +47,7 @@ Taints and tolerations:
 
 Taints are set on nodes and tolerations are set on pods
 
-Taints and tolerations doesnt tell pods to go to specific node , it will only tells node whether to accept specifc node
+Taints and tolerations doesnt tell pods to go to specific node , it will only tells node whether to accept specifc pod
 
 we can apply taints and tolerations on master node
 
