@@ -1,4 +1,4 @@
-Static pods:
+Static pods-
 ------------
 Static pods in Kubernetes are pods that are managed directly by the kubelet on a node, rather than by the control plane. These pods are defined on the node itself and are not included in the Kubernetes API server's etcd datastore. Static pods are typically used for system components that need to run on every node, such as network plugins or monitoring agents.
 
