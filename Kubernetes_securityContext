@@ -1,4 +1,4 @@
-Security Contexts
+Security Contexts:
 
 The securityContext in Kubernetes allows you to set security-related settings for a container or a pod. These settings include running the container as a specific user, group, or with specific Linux capabilities. Here's an example of an Nginx deployment file with a security context:
 
