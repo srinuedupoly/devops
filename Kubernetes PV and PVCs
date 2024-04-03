@@ -130,10 +130,10 @@ spec:
         volumeMounts:
         - name: nginx-logs-volume
           mountPath: /var/log/nginx
-  volumes:
-  - name: nginx-logs-volume
-    persistentVolumeClaim:
-      claimName: nginx-logs-pvc
+      volumes:
+      - name: nginx-logs-volume
+        persistentVolumeClaim:
+          claimName: nginx-logs-pvc
 
 ----------------------------------
 Kubectl create -f demo-pv-pvc.yml
